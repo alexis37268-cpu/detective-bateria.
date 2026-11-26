@@ -1,0 +1,37 @@
+name: Compilar APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Compilar
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+      - name: Renombrar APK
+        run: cp app/build/outputs/apk/release/app-release.apk DetectiveBateria.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DetectiveBateria-apk
+          path: DetectiveBateria.apk
+      - name: Publicar release "ultima"
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ultima
+          name: Detective de Batería (última versión)
+          body: "APK compilado del commit ${{ github.sha }}"
+          files: DetectiveBateria.apk
+          make_latest: true
